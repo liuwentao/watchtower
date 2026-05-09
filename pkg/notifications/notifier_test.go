@@ -270,6 +270,56 @@ var _ = Describe("notifications", func() {
 		})
 	})
 
+	Describe("the bark notifier", func() {
+		When("converting a bark service config into a shoutrrr url", func() {
+			It("should return the expected URL", func() {
+				command := cmd.NewRootCommand()
+				flags.RegisterNotificationFlags(command)
+
+				deviceKey := "device-key"
+				host := "api.day.app"
+				iconURL := "https://containrrr.dev/watchtower-sq180.png"
+				openURL := "https://containrrr.dev/watchtower/"
+
+				args := []string{
+					"--notifications",
+					"bark",
+					"--notification-bark-server-url",
+					fmt.Sprintf("https://%s/custom", host),
+					"--notification-bark-device-key",
+					deviceKey,
+					"--notification-bark-sound",
+					"bell",
+					"--notification-bark-group",
+					"watchtower",
+					"--notification-bark-icon",
+					iconURL,
+					"--notification-bark-url",
+					openURL,
+				}
+
+				Expect(command.ParseFlags(args)).To(Succeed())
+
+				urls, delay := notifications.AppendLegacyUrls([]string{}, command)
+				Expect(delay).To(Equal(time.Duration(0)))
+				Expect(urls).To(HaveLen(1))
+
+				u, err := url.Parse(urls[0])
+				Expect(err).NotTo(HaveOccurred())
+				Expect(u.Scheme).To(Equal("bark"))
+				Expect(u.Host).To(Equal(host))
+				Expect(u.Path).To(Equal("/custom"))
+				password, ok := u.User.Password()
+				Expect(ok).To(BeTrue())
+				Expect(password).To(Equal(deviceKey))
+				Expect(u.Query().Get("sound")).To(Equal("bell"))
+				Expect(u.Query().Get("group")).To(Equal("watchtower"))
+				Expect(u.Query().Get("icon")).To(Equal(iconURL))
+				Expect(u.Query().Get("url")).To(Equal(openURL))
+			})
+		})
+	})
+
 	Describe("the teams notifier", func() {
 		When("converting a teams service config into a shoutrrr url", func() {
 			It("should return the expected URL", func() {

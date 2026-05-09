@@ -56,6 +56,8 @@ func AppendLegacyUrls(urls []string, cmd *cobra.Command) ([]string, time.Duratio
 			legacyNotifier = newMsTeamsNotifier(cmd)
 		case gotifyType:
 			legacyNotifier = newGotifyNotifier(cmd)
+		case barkType:
+			legacyNotifier = newBarkNotifier(cmd)
 		case shoutrrrType:
 			continue
 		default:

@@ -221,7 +221,7 @@ func RegisterNotificationFlags(rootCmd *cobra.Command) {
 		"notifications",
 		"n",
 		envStringSlice("WATCHTOWER_NOTIFICATIONS"),
-		" Notification types to send (valid: email, slack, msteams, gotify, shoutrrr)")
+		" Notification types to send (valid: email, slack, msteams, gotify, bark, shoutrrr)")
 
 	flags.String(
 		"notifications-level",
@@ -355,6 +355,42 @@ Should only be used for testing.`)
 		envBool("WATCHTOWER_NOTIFICATION_GOTIFY_TLS_SKIP_VERIFY"),
 		`Controls whether watchtower verifies the Gotify server's certificate chain and host name.
 Should only be used for testing.`)
+
+	flags.StringP(
+		"notification-bark-server-url",
+		"",
+		envString("WATCHTOWER_NOTIFICATION_BARK_SERVER_URL"),
+		"The Bark server URL to send notifications to")
+
+	flags.StringP(
+		"notification-bark-device-key",
+		"",
+		envString("WATCHTOWER_NOTIFICATION_BARK_DEVICE_KEY"),
+		"The Bark device key used to send notifications")
+
+	flags.StringP(
+		"notification-bark-sound",
+		"",
+		envString("WATCHTOWER_NOTIFICATION_BARK_SOUND"),
+		"The Bark notification sound")
+
+	flags.StringP(
+		"notification-bark-group",
+		"",
+		envString("WATCHTOWER_NOTIFICATION_BARK_GROUP"),
+		"The Bark notification group")
+
+	flags.StringP(
+		"notification-bark-icon",
+		"",
+		envString("WATCHTOWER_NOTIFICATION_BARK_ICON"),
+		"The Bark notification icon URL")
+
+	flags.StringP(
+		"notification-bark-url",
+		"",
+		envString("WATCHTOWER_NOTIFICATION_BARK_URL"),
+		"The URL to open when tapping the Bark notification")
 
 	flags.String(
 		"notification-template",
@@ -517,6 +553,7 @@ func GetSecretsFromFiles(rootCmd *cobra.Command) {
 		"notification-slack-hook-url",
 		"notification-msteams-hook",
 		"notification-gotify-token",
+		"notification-bark-device-key",
 		"notification-url",
 		"http-api-token",
 	}

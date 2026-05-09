@@ -187,6 +187,7 @@ The types of notifications to send are set by passing a comma-separated list of 
 -   `slack` to send notifications through a Slack webhook
 -   `msteams` to send notifications via MSTeams webhook
 -   `gotify` to send notifications via Gotify
+-   `bark` to send notifications via Bark
 
 ### `notify-upgrade`
 If watchtower is started with `notify-upgrade` as it's first argument, it will generate a .env file with your current legacy notification options converted to shoutrrr URLs.
@@ -388,3 +389,26 @@ docker run -d \
 
 If you want to disable TLS verification for the Gotify instance, you can use either `-e WATCHTOWER_NOTIFICATION_GOTIFY_TLS_SKIP_VERIFY=true` or `--notification-gotify-tls-skip-verify`.
 
+### Bark
+
+To push a notification to Bark, specify the Bark server URL and device key:
+
+```bash
+docker run -d \
+  --name watchtower \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -e WATCHTOWER_NOTIFICATIONS=bark \
+  -e WATCHTOWER_NOTIFICATION_BARK_SERVER_URL="https://api.day.app" \
+  -e WATCHTOWER_NOTIFICATION_BARK_DEVICE_KEY="YourDeviceKey" \
+  containrrr/watchtower
+```
+
+`-e WATCHTOWER_NOTIFICATION_BARK_DEVICE_KEY` or `--notification-bark-device-key` can also reference a file, in which case the contents of the file are used.
+
+Optional Bark settings:
+
+-   `--notification-bark-server-url` (env. `WATCHTOWER_NOTIFICATION_BARK_SERVER_URL`): The Bark server URL.
+-   `--notification-bark-sound` (env. `WATCHTOWER_NOTIFICATION_BARK_SOUND`): The Bark notification sound.
+-   `--notification-bark-group` (env. `WATCHTOWER_NOTIFICATION_BARK_GROUP`): The Bark notification group.
+-   `--notification-bark-icon` (env. `WATCHTOWER_NOTIFICATION_BARK_ICON`): The Bark notification icon URL.
+-   `--notification-bark-url` (env. `WATCHTOWER_NOTIFICATION_BARK_URL`): The URL to open when tapping the notification.

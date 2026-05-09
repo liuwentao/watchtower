@@ -38,6 +38,7 @@ The following arguments are currently supported (including their corresponding `
  - `notification-slack-hook-url`
  - `notification-msteams-hook`
  - `notification-gotify-token`
+ - `notification-bark-device-key`
  - `http-api-token`
 
 ### Example docker-compose usage
