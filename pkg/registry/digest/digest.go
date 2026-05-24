@@ -22,7 +22,7 @@ import (
 const ContentDigestHeader = "Docker-Content-Digest"
 
 // CompareDigest ...
-func CompareDigest(container types.Container, registryAuth string) (bool, error) {
+func CompareDigest(container types.Container, registryAuth string, defaultRegistryOverride string) (bool, error) {
 	if !container.HasImageInfo() {
 		return false, errors.New("container image info missing")
 	}
@@ -30,12 +30,12 @@ func CompareDigest(container types.Container, registryAuth string) (bool, error)
 	var digest string
 
 	registryAuth = TransformAuth(registryAuth)
-	token, err := auth.GetToken(container, registryAuth)
+	token, err := auth.GetToken(container, registryAuth, defaultRegistryOverride)
 	if err != nil {
 		return false, err
 	}
 
-	digestURL, err := manifest.BuildManifestURL(container)
+	digestURL, err := manifest.BuildManifestURL(container, defaultRegistryOverride)
 	if err != nil {
 		return false, err
 	}

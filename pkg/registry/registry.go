@@ -41,14 +41,14 @@ func DefaultAuthHandler() (string, error) {
 // to respond well to HTTP HEAD in checking the container digest -- or if there
 // are problems parsing the container hostname.
 // Will return false if behavior for container is unknown.
-func WarnOnAPIConsumption(container watchtowerTypes.Container) bool {
+func WarnOnAPIConsumption(container watchtowerTypes.Container, defaultRegistryOverride string) bool {
 
 	normalizedRef, err := ref.ParseNormalizedNamed(container.ImageName())
 	if err != nil {
 		return true
 	}
 
-	containerHost, err := helpers.GetRegistryAddress(normalizedRef.Name())
+	containerHost, err := helpers.GetRegistryAddressForRequest(normalizedRef.Name(), defaultRegistryOverride)
 	if err != nil {
 		return true
 	}

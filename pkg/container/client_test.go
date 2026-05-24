@@ -65,6 +65,37 @@ var _ = Describe("the client", func() {
 			})
 		})
 	})
+	Describe("defaultRegistryOverrideFromInfo", func() {
+		It("should use the first valid Docker registry mirror host", func() {
+			override := defaultRegistryOverrideFromInfo(&mockInfoClient{
+				info: types.Info{
+					RegistryConfig: types.RegistryConfig{
+						Mirrors: []string{
+							"https://mirror.ccs.tencentyun.com",
+							"https://mirror.gcr.io",
+						},
+					},
+				},
+			})
+
+			Expect(override).To(Equal("mirror.ccs.tencentyun.com"))
+		})
+
+		It("should skip invalid mirror entries", func() {
+			override := defaultRegistryOverrideFromInfo(&mockInfoClient{
+				info: types.Info{
+					RegistryConfig: types.RegistryConfig{
+						Mirrors: []string{
+							"https://mirror.example.com/v2",
+							"https://mirror.gcr.io",
+						},
+					},
+				},
+			})
+
+			Expect(override).To(Equal("mirror.gcr.io"))
+		})
+	})
 	When("pulling the latest image", func() {
 		When("the image consist of a pinned hash", func() {
 			It("should gracefully fail with a useful message", func() {
@@ -336,6 +367,16 @@ var _ = Describe("the client", func() {
 		})
 	})
 })
+
+type mockInfoClient struct {
+	cli.CommonAPIClient
+	info types.Info
+	err  error
+}
+
+func (m *mockInfoClient) Info(context.Context) (types.Info, error) {
+	return m.info, m.err
+}
 
 // Capture logrus output in buffer
 func captureLogrus(level logrus.Level) (func(), *gbytes.Buffer) {

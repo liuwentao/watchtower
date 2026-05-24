@@ -13,31 +13,36 @@ var _ = Describe("Registry", func() {
 	Describe("WarnOnAPIConsumption", func() {
 		When("Given a container with an image from ghcr.io", func() {
 			It("should want to warn", func() {
-				Expect(testContainerWithImage("ghcr.io/containrrr/watchtower")).To(BeTrue())
+				Expect(testContainerWithImage("ghcr.io/containrrr/watchtower", "")).To(BeTrue())
 			})
 		})
 		When("Given a container with an image implicitly from dockerhub", func() {
 			It("should want to warn", func() {
-				Expect(testContainerWithImage("docker:latest")).To(BeTrue())
+				Expect(testContainerWithImage("docker:latest", "")).To(BeTrue())
 			})
 		})
 		When("Given a container with an image explicitly from dockerhub", func() {
 			It("should want to warn", func() {
-				Expect(testContainerWithImage("index.docker.io/docker:latest")).To(BeTrue())
-				Expect(testContainerWithImage("docker.io/docker:latest")).To(BeTrue())
+				Expect(testContainerWithImage("index.docker.io/docker:latest", "")).To(BeTrue())
+				Expect(testContainerWithImage("docker.io/docker:latest", "")).To(BeTrue())
+			})
+		})
+		When("Given a container with a Docker Hub mirror override", func() {
+			It("should not want to warn", func() {
+				Expect(testContainerWithImage("docker:latest", "mirror.ccs.tencentyun.com")).To(BeFalse())
 			})
 		})
 		When("Given a container with an image from some other registry", func() {
 			It("should not want to warn", func() {
-				Expect(testContainerWithImage("docker.fsf.org/docker:latest")).To(BeFalse())
-				Expect(testContainerWithImage("altavista.com/docker:latest")).To(BeFalse())
-				Expect(testContainerWithImage("gitlab.com/docker:latest")).To(BeFalse())
+				Expect(testContainerWithImage("docker.fsf.org/docker:latest", "")).To(BeFalse())
+				Expect(testContainerWithImage("altavista.com/docker:latest", "")).To(BeFalse())
+				Expect(testContainerWithImage("gitlab.com/docker:latest", "")).To(BeFalse())
 			})
 		})
 	})
 })
 
-func testContainerWithImage(imageName string) bool {
+func testContainerWithImage(imageName string, defaultRegistryOverride string) bool {
 	container := mocks.CreateMockContainer("", "", imageName, time.Now())
-	return unit.WarnOnAPIConsumption(container)
+	return unit.WarnOnAPIConsumption(container, defaultRegistryOverride)
 }

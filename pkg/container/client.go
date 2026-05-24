@@ -16,6 +16,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/containrrr/watchtower/pkg/registry"
+	"github.com/containrrr/watchtower/pkg/registry/helpers"
 	"github.com/containrrr/watchtower/pkg/registry/digest"
 	t "github.com/containrrr/watchtower/pkg/types"
 )
@@ -50,8 +51,9 @@ func NewClient(opts ClientOptions) Client {
 	}
 
 	return dockerClient{
-		api:           cli,
-		ClientOptions: opts,
+		api:                     cli,
+		ClientOptions:           opts,
+		defaultRegistryOverride: defaultRegistryOverrideFromInfo(cli),
 	}
 }
 
@@ -79,6 +81,7 @@ const (
 type dockerClient struct {
 	api sdkClient.CommonAPIClient
 	ClientOptions
+	defaultRegistryOverride string
 }
 
 func (client dockerClient) WarnOnHeadPullFailed(container t.Container) bool {
@@ -89,7 +92,28 @@ func (client dockerClient) WarnOnHeadPullFailed(container t.Container) bool {
 		return false
 	}
 
-	return registry.WarnOnAPIConsumption(container)
+	return registry.WarnOnAPIConsumption(container, client.defaultRegistryOverride)
+}
+
+func defaultRegistryOverrideFromInfo(api sdkClient.CommonAPIClient) string {
+	info, err := api.Info(context.Background())
+	if err != nil {
+		log.Debugf("Could not inspect Docker registry mirrors: %v", err)
+		return ""
+	}
+
+	for _, mirror := range info.RegistryConfig.Mirrors {
+		host, err := helpers.NormalizeRegistryHost(mirror)
+		if err != nil {
+			log.WithError(err).Warnf("Ignoring invalid Docker registry mirror %q", mirror)
+			continue
+		}
+
+		log.WithField("host", host).Debug("Using Docker registry mirror for direct Docker Hub requests")
+		return host
+	}
+
+	return ""
 }
 
 func (client dockerClient) ListContainers(fn t.Filter) ([]t.Container, error) {
@@ -374,7 +398,7 @@ func (client dockerClient) PullImage(ctx context.Context, container t.Container)
 
 	log.WithFields(fields).Debugf("Checking if pull is needed")
 
-	if match, err := digest.CompareDigest(container, opts.RegistryAuth); err != nil {
+	if match, err := digest.CompareDigest(container, opts.RegistryAuth, client.defaultRegistryOverride); err != nil {
 		headLevel := log.DebugLevel
 		if client.WarnOnHeadPullFailed(container) {
 			headLevel = log.WarnLevel

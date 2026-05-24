@@ -58,7 +58,7 @@ var _ = Describe("the auth module", func() {
 		It("should parse the token from the response",
 			SkipIfCredentialsEmpty(GHCRCredentials, func() {
 				creds := fmt.Sprintf("%s:%s", GHCRCredentials.Username, GHCRCredentials.Password)
-				token, err := auth.GetToken(mockContainer, creds)
+				token, err := auth.GetToken(mockContainer, creds, "")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(token).NotTo(Equal(""))
 			}),
@@ -134,17 +134,22 @@ var _ = Describe("the auth module", func() {
 		It("should create a valid challenge url object based on the image ref supplied", func() {
 			expected := url.URL{Host: "ghcr.io", Scheme: "https", Path: "/v2/"}
 			imageRef, _ := ref.ParseNormalizedNamed("ghcr.io/containrrr/watchtower:latest")
-			Expect(auth.GetChallengeURL(imageRef)).To(Equal(expected))
+			Expect(auth.GetChallengeURL(imageRef, "")).To(Equal(expected))
 		})
 		It("should assume Docker Hub for image refs with no explicit registry", func() {
 			expected := url.URL{Host: "index.docker.io", Scheme: "https", Path: "/v2/"}
 			imageRef, _ := ref.ParseNormalizedNamed("containrrr/watchtower:latest")
-			Expect(auth.GetChallengeURL(imageRef)).To(Equal(expected))
+			Expect(auth.GetChallengeURL(imageRef, "")).To(Equal(expected))
 		})
 		It("should use index.docker.io if the image ref specifies docker.io", func() {
 			expected := url.URL{Host: "index.docker.io", Scheme: "https", Path: "/v2/"}
 			imageRef, _ := ref.ParseNormalizedNamed("docker.io/containrrr/watchtower:latest")
-			Expect(auth.GetChallengeURL(imageRef)).To(Equal(expected))
+			Expect(auth.GetChallengeURL(imageRef, "")).To(Equal(expected))
+		})
+		It("should use the Docker Hub mirror for direct requests when configured", func() {
+			expected := url.URL{Host: "mirror.ccs.tencentyun.com", Scheme: "https", Path: "/v2/"}
+			imageRef, _ := ref.ParseNormalizedNamed("containrrr/watchtower:latest")
+			Expect(auth.GetChallengeURL(imageRef, "mirror.ccs.tencentyun.com")).To(Equal(expected))
 		})
 	})
 })

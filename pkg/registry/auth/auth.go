@@ -19,13 +19,13 @@ import (
 const ChallengeHeader = "WWW-Authenticate"
 
 // GetToken fetches a token for the registry hosting the provided image
-func GetToken(container types.Container, registryAuth string) (string, error) {
+func GetToken(container types.Container, registryAuth string, defaultRegistryOverride string) (string, error) {
 	normalizedRef, err := ref.ParseNormalizedNamed(container.ImageName())
 	if err != nil {
 		return "", err
 	}
 
-	URL := GetChallengeURL(normalizedRef)
+	URL := GetChallengeURL(normalizedRef, defaultRegistryOverride)
 	logrus.WithField("URL", URL.String()).Debug("Built challenge URL")
 
 	var req *http.Request
@@ -150,8 +150,8 @@ func GetAuthURL(challenge string, imageRef ref.Named) (*url.URL, error) {
 
 // GetChallengeURL returns the URL to check auth requirements
 // for access to a given image
-func GetChallengeURL(imageRef ref.Named) url.URL {
-	host, _ := helpers.GetRegistryAddress(imageRef.Name())
+func GetChallengeURL(imageRef ref.Named, defaultRegistryOverride string) url.URL {
+	host, _ := helpers.GetRegistryAddressForRequest(imageRef.Name(), defaultRegistryOverride)
 
 	URL := url.URL{
 		Scheme: "https",

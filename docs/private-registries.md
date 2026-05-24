@@ -35,6 +35,11 @@ password `auth` string:
     <sub>Watchtower will recognize credentials with `<REGISTRY_NAME>` `index.docker.io`,
     but the Docker CLI will not.</sub>
 
+!!! info "Using Docker Hub registry mirrors"
+    If the Docker daemon is configured with `registry-mirrors`, watchtower will reuse
+    the first mirror for its direct Docker Hub `HEAD` and token requests. Image pulls
+    still go through the Docker daemon as usual.
+
 !!! important "Using a private registry on a local host"
     To use a private registry hosted locally, make sure to correctly specify the registry host
     in both `config.json` and the `docker run` command or `docker-compose` file.

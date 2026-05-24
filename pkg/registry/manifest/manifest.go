@@ -12,7 +12,7 @@ import (
 )
 
 // BuildManifestURL from raw image data
-func BuildManifestURL(container types.Container) (string, error) {
+func BuildManifestURL(container types.Container, defaultRegistryOverride string) (string, error) {
 	normalizedRef, err := ref.ParseDockerRef(container.ImageName())
 	if err != nil {
 		return "", err
@@ -22,7 +22,7 @@ func BuildManifestURL(container types.Container) (string, error) {
 		return "", errors.New("Parsed container image ref has no tag: " + normalizedRef.String())
 	}
 
-	host, _ := helpers.GetRegistryAddress(normalizedTaggedRef.Name())
+	host, _ := helpers.GetRegistryAddressForRequest(normalizedTaggedRef.Name(), defaultRegistryOverride)
 	img, tag := ref.Path(normalizedTaggedRef), normalizedTaggedRef.Tag()
 
 	logrus.WithFields(logrus.Fields{

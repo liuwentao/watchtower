@@ -34,6 +34,14 @@ var _ = Describe("the manifest module", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(URL).To(Equal(expected))
 		})
+		It("should use the configured Docker Hub mirror for direct requests", func() {
+			imageRef := "containrrr/watchtower:latest"
+			expected := "https://mirror.ccs.tencentyun.com/v2/containrrr/watchtower/manifests/latest"
+
+			URL, err := buildMockContainerManifestURLWithOverride(imageRef, "mirror.ccs.tencentyun.com")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(URL).To(Equal(expected))
+		})
 		It("should assume latest for image refs with no explicit tag", func() {
 			imageRef := "containrrr/watchtower"
 			expected := "https://index.docker.io/v2/containrrr/watchtower/manifests/latest"
@@ -70,5 +78,19 @@ func buildMockContainerManifestURL(imageRef string) (string, error) {
 	mockCreated := time.Now()
 	mock := mocks.CreateMockContainerWithImageInfo(mockID, mockName, imageRef, mockCreated, imageInfo)
 
-	return manifest.BuildManifestURL(mock)
+	return manifest.BuildManifestURL(mock, "")
+}
+
+func buildMockContainerManifestURLWithOverride(imageRef string, defaultRegistryOverride string) (string, error) {
+	imageInfo := apiTypes.ImageInspect{
+		RepoTags: []string{
+			imageRef,
+		},
+	}
+	mockID := "mock-id"
+	mockName := "mock-container"
+	mockCreated := time.Now()
+	mock := mocks.CreateMockContainerWithImageInfo(mockID, mockName, imageRef, mockCreated, imageInfo)
+
+	return manifest.BuildManifestURL(mock, defaultRegistryOverride)
 }
