@@ -18,6 +18,7 @@ const (
 type barkTypeNotifier struct {
 	apiURL    string
 	deviceKey string
+	host      string
 	sound     string
 	group     string
 	icon      string
@@ -29,6 +30,7 @@ func newBarkNotifier(c *cobra.Command) t.ConvertibleNotifier {
 
 	apiURL := getBarkURL(flags)
 	deviceKey := getBarkDeviceKey(flags)
+	host := GetTemplateData(c).Host
 	sound, _ := flags.GetString("notification-bark-sound")
 	group, _ := flags.GetString("notification-bark-group")
 	icon, _ := flags.GetString("notification-bark-icon")
@@ -37,6 +39,7 @@ func newBarkNotifier(c *cobra.Command) t.ConvertibleNotifier {
 	return &barkTypeNotifier{
 		apiURL:    apiURL,
 		deviceKey: deviceKey,
+		host:      host,
 		sound:     sound,
 		group:     group,
 		icon:      icon,
@@ -72,13 +75,18 @@ func (n *barkTypeNotifier) GetURL(c *cobra.Command) (string, error) {
 		return "", err
 	}
 
+	group := n.group
+	if group == "" {
+		group = n.host
+	}
+
 	config := &shoutrrrBark.Config{
 		Host:      apiURL.Host,
 		Path:      apiURL.Path,
 		DeviceKey: n.deviceKey,
 		Scheme:    apiURL.Scheme,
 		Sound:     n.sound,
-		Group:     n.group,
+		Group:     group,
 		Icon:      n.icon,
 		URL:       n.url,
 	}

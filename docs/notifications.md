@@ -409,6 +409,6 @@ Optional Bark settings:
 
 -   `--notification-bark-server-url` (env. `WATCHTOWER_NOTIFICATION_BARK_SERVER_URL`): The Bark server URL.
 -   `--notification-bark-sound` (env. `WATCHTOWER_NOTIFICATION_BARK_SOUND`): The Bark notification sound.
--   `--notification-bark-group` (env. `WATCHTOWER_NOTIFICATION_BARK_GROUP`): The Bark notification group.
+-   `--notification-bark-group` (env. `WATCHTOWER_NOTIFICATION_BARK_GROUP`): The Bark notification group. If omitted, Watchtower uses the notification hostname as the default group so notifications from different hosts are easier to distinguish.
 -   `--notification-bark-icon` (env. `WATCHTOWER_NOTIFICATION_BARK_ICON`): The Bark notification icon URL.
 -   `--notification-bark-url` (env. `WATCHTOWER_NOTIFICATION_BARK_URL`): The URL to open when tapping the notification.

@@ -318,6 +318,37 @@ var _ = Describe("notifications", func() {
 				Expect(u.Query().Get("url")).To(Equal(openURL))
 			})
 		})
+		When("no bark group is configured", func() {
+			It("should use the notification hostname as group", func() {
+				command := cmd.NewRootCommand()
+				flags.RegisterNotificationFlags(command)
+
+				deviceKey := "device-key"
+				host := "api.day.app"
+				notificationHost := "test.host"
+
+				args := []string{
+					"--notifications",
+					"bark",
+					"--notification-bark-server-url",
+					fmt.Sprintf("https://%s/custom", host),
+					"--notification-bark-device-key",
+					deviceKey,
+					"--notifications-hostname",
+					notificationHost,
+				}
+
+				Expect(command.ParseFlags(args)).To(Succeed())
+
+				urls, delay := notifications.AppendLegacyUrls([]string{}, command)
+				Expect(delay).To(Equal(time.Duration(0)))
+				Expect(urls).To(HaveLen(1))
+
+				u, err := url.Parse(urls[0])
+				Expect(err).NotTo(HaveOccurred())
+				Expect(u.Query().Get("group")).To(Equal(notificationHost))
+			})
+		})
 	})
 
 	Describe("the teams notifier", func() {
