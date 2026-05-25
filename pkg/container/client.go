@@ -386,6 +386,11 @@ func (client dockerClient) PullImage(ctx context.Context, container t.Container)
 		return fmt.Errorf("container uses a pinned image, and cannot be updated by watchtower")
 	}
 
+	if container.HasImageInfo() && len(container.ImageInfo().RepoDigests) == 0 {
+		log.WithFields(fields).Debug("Image has no repo digests; assuming it was built locally and skipping pull.")
+		return nil
+	}
+
 	log.WithFields(fields).Debugf("Trying to load authentication credentials.")
 	opts, err := registry.GetPullOptions(imageName)
 	if err != nil {

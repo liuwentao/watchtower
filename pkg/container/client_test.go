@@ -11,6 +11,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/backend"
+	"github.com/docker/docker/api/types/registry"
 	cli "github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
 	"github.com/onsi/gomega/gbytes"
@@ -69,7 +70,7 @@ var _ = Describe("the client", func() {
 		It("should use the first valid Docker registry mirror host", func() {
 			override := defaultRegistryOverrideFromInfo(&mockInfoClient{
 				info: types.Info{
-					RegistryConfig: types.RegistryConfig{
+					RegistryConfig: &registry.ServiceConfig{
 						Mirrors: []string{
 							"https://mirror.ccs.tencentyun.com",
 							"https://mirror.gcr.io",
@@ -84,7 +85,7 @@ var _ = Describe("the client", func() {
 		It("should skip invalid mirror entries", func() {
 			override := defaultRegistryOverrideFromInfo(&mockInfoClient{
 				info: types.Info{
-					RegistryConfig: types.RegistryConfig{
+					RegistryConfig: &registry.ServiceConfig{
 						Mirrors: []string{
 							"https://mirror.example.com/v2",
 							"https://mirror.gcr.io",
@@ -103,6 +104,18 @@ var _ = Describe("the client", func() {
 				pinnedContainer := MockContainer(WithImageName("sha256:fa5269854a5e615e51a72b17ad3fd1e01268f278a6684c8ed3c5f0cdce3f230b"))
 				err := c.PullImage(context.Background(), pinnedContainer)
 				Expect(err).To(MatchError(`container uses a pinned image, and cannot be updated by watchtower`))
+			})
+		})
+		When("the image has no repo digests", func() {
+			It("should skip pulling because the image is local-only", func() {
+				c := dockerClient{}
+				localContainer := MockContainer(WithImageName("my-local-app:latest"))
+
+				resetLogrus, logbuf := captureLogrus(logrus.DebugLevel)
+				defer resetLogrus()
+
+				Expect(c.PullImage(context.Background(), localContainer)).To(Succeed())
+				Eventually(logbuf).Should(gbytes.Say(`assuming it was built locally and skipping pull`))
 			})
 		})
 	})
