@@ -19,6 +19,11 @@ import (
 // use watchtower
 const DockerAPIMinVersion string = "1.25"
 
+const (
+	defaultSchedule = "0 0 8,20 * * *"
+	defaultTimeZone = "Asia/Shanghai"
+)
+
 var defaultInterval = int((time.Hour * 24).Seconds())
 
 // RegisterDockerFlags that are used directly by the docker api client
@@ -458,6 +463,7 @@ func SetDefaults() {
 	viper.SetDefault("DOCKER_HOST", "unix:///var/run/docker.sock")
 	viper.SetDefault("DOCKER_API_VERSION", DockerAPIMinVersion)
 	viper.SetDefault("WATCHTOWER_POLL_INTERVAL", defaultInterval)
+	viper.SetDefault("WATCHTOWER_SCHEDULE", defaultSchedule)
 	viper.SetDefault("WATCHTOWER_TIMEOUT", time.Second*10)
 	viper.SetDefault("WATCHTOWER_NOTIFICATIONS", []string{})
 	viper.SetDefault("WATCHTOWER_NOTIFICATIONS_LEVEL", "info")
@@ -466,6 +472,9 @@ func SetDefaults() {
 	viper.SetDefault("WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER", "watchtower")
 	viper.SetDefault("WATCHTOWER_LOG_LEVEL", "info")
 	viper.SetDefault("WATCHTOWER_LOG_FORMAT", "auto")
+	viper.SetDefault("TZ", defaultTimeZone)
+
+	syncLocalTimeZone()
 }
 
 // EnvConfig translates the command-line options into environment variables
@@ -642,7 +651,7 @@ func ProcessFlagAliases(flags *pflag.FlagSet) {
 	intervalChanged := flags.Changed(`interval`)
 	// FIXME: snakeswap
 	// due to how viper is integrated by swapping the defaults for the flags, we need this hack:
-	if val, _ := flags.GetString(`schedule`); val != `` {
+	if val, _ := flags.GetString(`schedule`); val != defaultSchedule {
 		scheduleChanged = true
 	}
 	if val, _ := flags.GetInt(`interval`); val != defaultInterval {
@@ -653,8 +662,8 @@ func ProcessFlagAliases(flags *pflag.FlagSet) {
 		log.Fatal(`Only schedule or interval can be defined, not both.`)
 	}
 
-	// update schedule flag to match interval if it's set, or to the default if none of them are
-	if intervalChanged || !scheduleChanged {
+	// Update schedule to match interval if interval mode is explicitly requested.
+	if intervalChanged {
 		interval, _ := flags.GetInt(`interval`)
 		_ = flags.Set(`schedule`, fmt.Sprintf(`@every %ds`, interval))
 	}
@@ -667,6 +676,29 @@ func ProcessFlagAliases(flags *pflag.FlagSet) {
 		_ = flags.Set(`log-level`, `trace`)
 	}
 
+}
+
+func syncLocalTimeZone() {
+	timeZone := envString("TZ")
+	if timeZone == "" {
+		return
+	}
+
+	location, err := time.LoadLocation(timeZone)
+	if err != nil {
+		if timeZone == defaultTimeZone {
+			log.Fatalf("failed to load default timezone %q: %v", timeZone, err)
+		}
+		return
+	}
+
+	time.Local = location
+
+	if os.Getenv("TZ") == "" {
+		if err := os.Setenv("TZ", timeZone); err != nil {
+			log.Fatalf("failed to set default timezone %q: %v", timeZone, err)
+		}
+	}
 }
 
 // SetupLogging reads only the flags that is needed to set up logging and applies them to the global logger

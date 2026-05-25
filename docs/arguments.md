@@ -66,14 +66,14 @@ Environment Variable: N/A
 ```
 
 ## Time Zone
-Sets the time zone to be used by WatchTower's logs and the optional Cron scheduling argument (--schedule). If this environment variable is not set, Watchtower will use the default time zone: UTC.
+Sets the time zone to be used by WatchTower's logs and the optional Cron scheduling argument (--schedule). If this environment variable is not set, Watchtower will use the default time zone: Asia/Shanghai.
 To find out the right value, see [this list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), find your location and use the value in _TZ Database Name_, e.g _Europe/Rome_. The timezone can alternatively be set by volume mounting your hosts /etc/localtime file. `-v /etc/localtime:/etc/localtime:ro`
 
 ```text
             Argument: N/A
 Environment Variable: TZ
                 Type: String
-             Default: "UTC"
+             Default: "Asia/Shanghai"
 ```
 
 ## Cleanup
@@ -207,7 +207,7 @@ Environment Variable: WATCHTOWER_REVIVE_STOPPED
 ```
 
 ## Poll interval
-Poll interval (in seconds). This value controls how frequently watchtower will poll for new images. Either `--schedule` or a poll interval can be defined, but not both.
+Poll interval (in seconds). This value controls how frequently watchtower will poll for new images when interval mode is used. Either `--schedule` or a poll interval can be defined, but not both.
 
 ```text
             Argument: --interval, -i
@@ -384,13 +384,13 @@ Environment Variable: WATCHTOWER_HTTP_API_METRICS
 
 ## Scheduling
 [Cron expression](https://pkg.go.dev/github.com/robfig/cron@v1.2.0?tab=doc#hdr-CRON_Expression_Format) in 6 fields (rather than the traditional 5) which defines when and how often to check for new images. Either `--interval` or the schedule expression
-can be defined, but not both. An example: `--schedule "0 0 4 * * *"`
+can be defined, but not both. By default, Watchtower runs at `08:00` and `20:00` in `Asia/Shanghai`. An example: `--schedule "0 0 4 * * *"`
 
 ```text
             Argument: --schedule, -s
 Environment Variable: WATCHTOWER_SCHEDULE
                 Type: String
-             Default: -
+             Default: "0 0 8,20 * * *"
 ```
 
 ## Rolling restart

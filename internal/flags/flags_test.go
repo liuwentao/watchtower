@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -120,6 +121,19 @@ func TestHTTPAPIPeriodicPollsFlag(t *testing.T) {
 	assert.Equal(t, true, periodicPolls)
 }
 
+func TestSetDefaults_DefaultTimeZone(t *testing.T) {
+	originalLocal := time.Local
+	t.Cleanup(func() {
+		time.Local = originalLocal
+	})
+	t.Setenv("TZ", "")
+
+	SetDefaults()
+
+	assert.Equal(t, defaultTimeZone, os.Getenv("TZ"))
+	assert.Equal(t, defaultTimeZone, time.Local.String())
+}
+
 func TestIsFile(t *testing.T) {
 	assert.False(t, isFile("https://google.com"), "an URL should never be considered a file")
 	assert.True(t, isFile(os.Args[0]), "the currently running binary path should always be considered a file")
@@ -175,6 +189,22 @@ func TestProcessFlagAliasesLogLevelFromEnvironment(t *testing.T) {
 
 	logLevel, _ := flags.GetString(`log-level`)
 	assert.Equal(t, `debug`, logLevel)
+}
+
+func TestProcessFlagAliasesDefaultSchedule(t *testing.T) {
+	cmd := new(cobra.Command)
+
+	SetDefaults()
+	RegisterDockerFlags(cmd)
+	RegisterSystemFlags(cmd)
+	RegisterNotificationFlags(cmd)
+
+	require.NoError(t, cmd.ParseFlags([]string{}))
+	flags := cmd.Flags()
+	ProcessFlagAliases(flags)
+
+	sched, _ := flags.GetString(`schedule`)
+	assert.Equal(t, defaultSchedule, sched)
 }
 
 func TestLogFormatFlag(t *testing.T) {
